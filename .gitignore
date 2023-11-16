@@ -37,3 +37,4 @@ terraform.rc
 /Terraform/out/*
 /.idea/
 *.iml
+!/Terraform/out/README.md
