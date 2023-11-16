@@ -1,6 +1,6 @@
 # Terraform Directory
 
-## Terraform directory contains an example Debeziym configuration capturing data in Postgresql and writes it to MySQL
+## Terraform directory contains an example Debezium configuration capturing data in Postgresql and writes it to MySQL
 ### Setup variables
 * copy terraform.tfvars.sample to terraform.tfvars
 * update terrform.tfvars with the relevant data
