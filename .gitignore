@@ -36,3 +36,4 @@ terraform.rc
 /Terraform/.terraform.lock.hcl
 /Terraform/out/*
 /.idea/
+*.iml
