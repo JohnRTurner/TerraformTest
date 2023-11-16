@@ -1,0 +1,3 @@
+aiven_api_token = "api_token_here"
+project_name    = "project_name_here"
+cloud_name = "cloud_name"
