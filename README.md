@@ -11,12 +11,12 @@ This project contains pre-created samples for testing purposes. These **are not*
 * update terrform.tfvars with the relevant data
 ### Terraform commands 
 The commands must be issued inside the Terraform directory
-* **terraform init** - Used to initialize the Terraform client
-* **terraform plan** - Used to check what Terraform plans to do if applied
-* **terraform apply -auto-approve** - Used to execute the Terraform plan
-* **terraform output** - Show output parameters from the previous apply
-* **terraform plan -destroy** - Used to check what Terraform plans to do if a destroy command is issued
-* **terraform destroy** - Used to remove the resources from the Terraform plan
+* `terraform init` - Used to initialize the Terraform client
+* `terraform plan` - Used to check what Terraform plans to do if applied
+* `terraform apply -auto-approve` - Used to execute the Terraform plan
+* `terraform output` - Show output parameters from the previous apply
+* `terraform plan -destroy` - Used to check what Terraform plans to do if a destroy command is issued
+* `terraform destroy` - Used to remove the resources from the Terraform plan
 
 ## TerraformExamples directory contains various Terraform projects
 To use any of these examples 
