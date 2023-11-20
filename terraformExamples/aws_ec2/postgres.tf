@@ -15,7 +15,7 @@ resource "aiven_pg_database" "pg1db1" {
   service_name  = aiven_pg.pg1.service_name
   database_name = "pg1db1"
   provisioner "local-exec" {
-    command = format("export PGPASSWORD=%s;export PGHOST=%s;export PGPORT=%s;export PGUSER=%s;export PGDATABASE=%s;psql --file=postgres1.sql > out/postgres1.out 2>&1;buildpgenv.sh",
+    command = format("export PGPASSWORD=%s;psql --host=%s --port=%s --user=%s --dbname=%s --file=postgres1.sql > out/postgres1.out 2>&1",
       sensitive(aiven_pg.pg1.service_password),
       aiven_pg.pg1.service_host,
       aiven_pg.pg1.service_port,

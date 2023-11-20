@@ -5,7 +5,3 @@ mysql_user = "appuser"
 mysql_password = "your_pwd"
 pg_user = "appuser"
 pg_password = "your_pwd"
-aws_access_key = "aws_access_key"
-aws_secret_key = "aws_secret_key"
-aws_session_token
-aws_region = "cloud_name"
