@@ -5,7 +5,15 @@ mysql_user = "appuser"
 mysql_password = "your_pwd"
 pg_user = "appuser"
 pg_password = "your_pwd"
-aws_access_key = "aws_access_key"
-aws_secret_key = "aws_secret_key"
-aws_session_token
-aws_region = "cloud_name"
+
+
+
+AWS_ACCESS_KEY_ID="your_key"
+AWS_SECRET_ACCESS_KEY="your_secret"
+AWS_SESSION_TOKEN="your_token"
+
+aws_region = "us-east-2"
+dg_ami_id = "ami-0e83be366243f524a"
+dg_sg_id = "default"
+dg_key_pair_name = "your_key"
+dg_instance_name = "your-demo"
