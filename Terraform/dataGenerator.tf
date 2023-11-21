@@ -13,7 +13,15 @@ resource "aws_instance" "data-generator" {
   }
   security_groups = [var.dg_sg_id]
   key_name = var.dg_key_pair_name
-  user_data = file("out/localbuild.sh")
+  user_data = templatefile("dataGenerator.tftpl",
+    {
+      PGPASSWORD=aiven_pg.pg1.service_password,
+      PGHOST=aiven_pg.pg1.service_host,
+      PGPORT=aiven_pg.pg1.service_port,
+      PGUSER=aiven_pg.pg1.service_username,
+      PGDATABASE=aiven_pg_database.pg1db1.database_name
+    }
+  )
   tags = {
     Name = format("%s-%02d",var.dg_instance_name, count.index + 1)
   }

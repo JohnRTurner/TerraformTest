@@ -70,11 +70,6 @@ variable "dg_disk_gb" {
   default=16
 }
 
-#variable "dg_subnet_id" {
-#  description = "The VPC subnet the instance(s) will be created in"
-#  type = string
-#}
-
 variable "dg_ami_id" {
   description = "The AMI to use - Amazon Machine Image (Operating System)"
   type = string
