@@ -35,6 +35,7 @@ override.tf.json
 terraform.rc
 /Terraform/.terraform.lock.hcl
 /Terraform/out/*
+/venv
 /.idea/
 *.iml
 !/Terraform/out/README.md

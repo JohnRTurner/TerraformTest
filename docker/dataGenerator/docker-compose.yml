@@ -2,7 +2,11 @@ version: '3'
 services:
   web-server:
     image: nginx:latest
+    container_name: webServer
     ports:
       - '8080:80'
     volumes:
       - ./html:/usr/share/nginx/html
+  call-center:
+    build: callCenter
+    container_name: callCenter

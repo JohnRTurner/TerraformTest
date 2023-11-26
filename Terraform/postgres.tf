@@ -29,6 +29,17 @@ output "pg1_connect"{
   sensitive = true
 }
 
+output "pg1_command"{
+  value = format("export PGPASSWORD=%s;export PGHOST=%s;export PGPORT=%s;export PGUSER=%s;export PGDATABASE=%s;psql",
+    sensitive(aiven_pg.pg1.service_password),
+    aiven_pg.pg1.service_host,
+    aiven_pg.pg1.service_port,
+    sensitive(aiven_pg.pg1.service_username),
+    aiven_pg_database.pg1db1.database_name)
+  sensitive = true
+}
+
+
 output "pg1_host_port"{
   value = format("%s:%s", aiven_pg.pg1.service_host, aiven_pg.pg1.service_port)
 }

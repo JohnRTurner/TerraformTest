@@ -38,13 +38,11 @@ The commands must be issued inside the Terraform directory
 1. Prior to demo run `trerafiorm apply -auto-approve`
 2. Connect to the Postgres database
    ``` BASH
-   terraform output pg1_connect
-   export PGPASSWORD=xxx;psql --host=xxx --port=xxx --user=appuser --dbname=pg1db1
+   eval $(terraform output -raw pg1_command)
    ```
 3. Connect to the MySQL database
    ``` BASH
-   terraform output mysql1_connect
-   mysql --host=xxx --port=xxx --user=appuser --password=xxx mysqldb1
+   eval $(terraform output -raw mysql1_command)
    ```
 4. In Postgres window show the current state of the table
    ``` SQL

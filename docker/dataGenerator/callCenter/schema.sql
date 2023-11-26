@@ -1,7 +1,4 @@
-\l
-select current_user, current_database();
-
-CREATE TABLE IF NOT EXISTS agents (
+CREATE TABLE agents (
                         agent_id SERIAL PRIMARY KEY,
                         agent_name VARCHAR(50) NOT NULL,
                         department VARCHAR(50) NOT NULL,
@@ -9,7 +6,7 @@ CREATE TABLE IF NOT EXISTS agents (
                         is_active BOOLEAN
 );
 
-CREATE TABLE IF NOT EXISTS customers (
+CREATE TABLE customers (
                            customer_id SERIAL PRIMARY KEY,
                            customer_name VARCHAR(50) NOT NULL,
                            phone_number VARCHAR(15) NOT NULL,
@@ -19,7 +16,7 @@ CREATE TABLE IF NOT EXISTS customers (
                            country VARCHAR(100)
 );
 
-CREATE TABLE IF NOT EXISTS calls (
+CREATE TABLE calls (
                        call_id SERIAL PRIMARY KEY,
                        agent_id INT REFERENCES agents(agent_id),
                        customer_id INT REFERENCES customers(customer_id),
@@ -29,11 +26,3 @@ CREATE TABLE IF NOT EXISTS calls (
                        satisfaction_rating INT,
                        notes TEXT
 );
-
-create extension aiven_extras cascade;
-
-select * from aiven_extras.pg_create_publication('cdc_cust_pub','INSERT,UPDATE,DELETE','public.customers', 'public.calls');
-
-
-
-select now();

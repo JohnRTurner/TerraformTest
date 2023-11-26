@@ -37,6 +37,16 @@ output "mysql1_connect"{
   sensitive = true
 }
 
+output "mysql1_command"{
+  value = format("mysql --host=%s --port=%s --user=%s --password=%s %s",
+    aiven_mysql.mysql1.service_host,
+    aiven_mysql.mysql1.service_port,
+    sensitive(aiven_mysql.mysql1.service_username),
+    sensitive(aiven_mysql.mysql1.service_password),
+    aiven_mysql_database.mysql1db1.database_name)
+
+  sensitive = true
+}
 
 output "mysql1_host_port"{
   value = format("%s:%s", aiven_mysql.mysql1.service_host, aiven_mysql.mysql1.service_port)

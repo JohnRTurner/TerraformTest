@@ -1,23 +1,20 @@
 #!/bin/bash
 touch /tmp/gothere
 sudo apt update
-#sudo apt upgrade -y
 sudo apt install docker.io docker-compose nmon kafkacat -y
 sudo usermod -a -G docker ubuntu
 
-cd ~
-
-cat <<EOF>~/.docker.env
+cd /
+git clone https://github.com/JohnRTurner/TerraformTest.git
+cd TerraformTest/docker
+cat << EOF > .docker.env
 PGPASSWORD=${PGPASSWORD}
 PGHOST=${PGHOST}
 PGPORT=${PGPORT}
 PGUSER=${PGUSER}
 PGDATABASE=${PGDATABASE}
 EOF
-
-git clone https://github.com/JohnRTurner/TerraformTest.git
-cd TerrraformTest/docker/dataGenerator
-cat ~/.docker.env >> .env
-
-#added sudo back to ubuntu to resolve the docker group not being in the current environment
+cd dataGenerator
+cat ../.docker.env >> .env
+sudo chown -R 1000:1000 /TerraformTest
 sudo -u ubuntu docker-compose up -d
