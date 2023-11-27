@@ -88,15 +88,19 @@ def max_date(pool, table_name):
 
 
 def gen_agent(pool, batch_sz):
-    insert_data(pool, 'agents',
-                "agent_name, department, hire_date, is_active",
-                generate_agents_data(batch_sz))
+    print("Started Generating Agent Data", flush=True)
+    dat = generate_agents_data(batch_sz)
+    print("Finished Generating Agent Data, Started Inserting", flush=True)
+    insert_data(pool, 'agents', "agent_name, department, hire_date, is_active", dat)
+    print("Finished Inserting Agent Data", flush=True)
 
 
 def gen_customer(pool, batch_sz):
-    insert_data(pool, 'customers',
-                "customer_name, phone_number, email, address, city, country",
-                generate_customers_data(batch_sz))
+    print("Started Generating Customer Data", flush=True)
+    dat = generate_customers_data(batch_sz)
+    print("Finished Generating Customer Data, Started Inserting", flush=True)
+    insert_data(pool, 'customers',"customer_name, phone_number, email, address, city, country", dat)
+    print("Finished Inserting Customer Data", flush=True)
 
 
 def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
