@@ -55,7 +55,7 @@ def insert_data(pool, table_name, col_list, data):
     except Exception as e:
         print(f"WAITING FOR CONNECTION FOR {table_name} {e}", flush=True)
 
-    while not con1:
+    while con1 is None:
         sleep(1)
         try:
             con1 = pool.getconn
