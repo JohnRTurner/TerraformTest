@@ -22,8 +22,8 @@ days_to_cycle = 22
 def generate_agents_data(record_count: int):
     return [
         (
-            fake.name()[:50],
-            fake.job()[:50],
+            fake.name(),
+            fake.job(),
             fake.date_of_birth(minimum_age=22, maximum_age=65),
             fake.boolean()
         ) for _ in range(record_count)
@@ -34,12 +34,12 @@ def generate_agents_data(record_count: int):
 def generate_customers_data(record_count):
     return [
         (
-            fake.name()[:50],
-            fake.phone_number()[:15],
-            fake.email()[:100],
-            fake.address()[:200],
-            fake.city()[:100],
-            fake.country()[:100]
+            fake.name(),
+            fake.phone_number(),
+            fake.email(),
+            fake.address(),
+            fake.city(),
+            fake.country()
         ) for _ in range(record_count)
     ]
 
@@ -86,8 +86,21 @@ def max_date(pool, table_name):
         pool.putconn(conn)
 
 
+def gen_agent(pool, batch_sz):
+    insert_data(pool, 'agents',
+                "agent_name, department, hire_date, is_active",
+                generate_agents_data(batch_sz))
+
+
+def gen_customer(pool, batch_sz):
+    insert_data(pool, 'customers',
+                "customer_name, phone_number, email, address, city, country",
+                generate_customers_data(batch_sz))
+
+
 def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
-    print(f"Kick off job for {start_date} with {bus_day} business day for num_agents {num_agents} and num_customers {num_customers}")
+    print(
+        f"Kick off job for {start_date} with {bus_day} business day for num_agents {num_agents} and num_customers {num_customers}")
     start_date += timedelta(hours=8)  # start at 8am
     for agent in range(1, num_agents + 1):
         s_dt = start_date
@@ -145,9 +158,7 @@ with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
     futures = []
     min_batch = batch_size if (batch_size < int(args.num_agents)) else int(args.num_agents)
     while agents_count < int(args.num_agents):
-        futures.append(executor.submit(insert_data, connection_pool, 'agents',
-                                       "agent_name, department, hire_date, is_active",
-                                       generate_agents_data(min_batch)))
+        futures.append(executor.submit(gen_agent, connection_pool, min_batch))
         agents_count += min_batch
     for future in as_completed(futures):
         if hasattr(future, 'results'):
@@ -161,9 +172,7 @@ with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
     futures = []
     min_batch = batch_size if (batch_size < int(args.num_jobs)) else int(args.num_jobs)
     while customer_count < int(args.num_customers):
-        futures.append(executor.submit(insert_data, connection_pool, 'customers',
-                                       "customer_name, phone_number, email, address, city, country",
-                                       generate_customers_data(min_batch)))
+        futures.qppend(executor.submit(gen_customer, connection_pool, min_batch))
         customer_count += min_batch
     for future in as_completed(futures):
         if hasattr(future, 'results'):

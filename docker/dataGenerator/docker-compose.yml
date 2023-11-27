@@ -16,6 +16,6 @@ services:
       PGPASSWORD: ${PGPASSWORD}
       PGHOST: ${PGHOST}
       PGPORT: ${PGPORT}
-      NUMJOBS: 8
+      NUMJOBS: 2
       NUMAGENTS: 2500
       NUMCUSTOMERS: 50000000
