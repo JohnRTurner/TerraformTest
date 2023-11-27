@@ -161,7 +161,7 @@ batch_size = 100
 n_workers = int(args.num_jobs)
 n_queue = n_workers * 2
 semaphore = Semaphore(n_queue)
-print(f"Starting with {n_workers} workers and {n_queue} queue length")
+print(f"Starting with {n_workers} workers and {n_queue} queue length.")
 
 # Generate data for agents table
 agents_count = get_count(connection_pool, "agents")
