@@ -23,8 +23,8 @@ days_to_cycle = 22
 def generate_agents_data(record_count: int):
     return [
         (
-            fake.name(),
-            fake.job(),
+            fake.name()[:50],
+            fake.job()[:50],
             fake.date_of_birth(minimum_age=22, maximum_age=65),
             fake.boolean()
         ) for _ in range(record_count)
@@ -35,12 +35,12 @@ def generate_agents_data(record_count: int):
 def generate_customers_data(record_count):
     return [
         (
-            fake.name(),
-            fake.phone_number(),
-            fake.email(),
-            fake.address(),
-            fake.city(),
-            fake.country()
+            fake.name()[:50],
+            fake.phone_number()[:15],
+            fake.email()[:100],
+            fake.address()[:200],
+            fake.city()[:100],
+            fake.country()[:100]
         ) for _ in range(record_count)
     ]
 
@@ -53,7 +53,10 @@ def insert_data(pool, table_name, col_list, data):
             with conn.cursor() as cur:
                 placeholders = ', '.join(['%s'] * len(data[0]))
                 insert_query = f"INSERT INTO {table_name}({col_list}) VALUES ({placeholders})"
-                cur.executemany(insert_query, data)
+                x = cur.executemany(insert_query, data)
+                print(f"inserted into {table_name} {x} rows.", flush=True)
+    except Exception as e:
+        print(f"INSERT INTO {table_name} FAILED {e}", flush=True)
     finally:
         pool.putconn(conn)
 
@@ -185,7 +188,7 @@ print(f"Total Agents in Table: {agents_count}", flush=True)
 # Generate data for customers table
 customer_count = get_count(connection_pool, "customers")
 futures = []
-min_batch = batch_size if (batch_size < int(args.num_jobs)) else int(args.num_jobs)
+min_batch = batch_size if (batch_size < int(args.num_customers)) else int(args.num_customers)
 while customer_count < int(args.num_customers):
     future = executor.submit(gen_customer, connection_pool, min_batch)
     futures.append(future)
