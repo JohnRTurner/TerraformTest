@@ -1,5 +1,6 @@
 import argparse
 import random
+from asyncio import sleep
 from concurrent.futures import as_completed
 from datetime import datetime, timedelta
 from boundedexecutor import BoundedExecutor
@@ -47,18 +48,24 @@ def generate_customers_data(record_count):
 
 # Function to insert data into the tables using a connection from the pool
 def insert_data(pool, table_name, col_list, data):
-    conn = pool.getconn()
     try:
-        with conn:
-            with conn.cursor() as cur:
-                placeholders = ', '.join(['%s'] * len(data[0]))
-                insert_query = f"INSERT INTO {table_name}({col_list}) VALUES ({placeholders})"
-                x = cur.executemany(insert_query, data)
-                print(f"inserted into {table_name} {x} rows.", flush=True)
-    except Exception as e:
-        print(f"INSERT INTO {table_name} FAILED {e}", flush=True)
-    finally:
-        pool.putconn(conn)
+        conn = pool.getconn()
+        while not conn:
+            await sleep(1)
+            conn = pool.getconn
+        try:
+            with conn:
+                with conn.cursor() as cur:
+                    placeholders = ', '.join(['%s'] * len(data[0]))
+                    insert_query = f"INSERT INTO {table_name}({col_list}) VALUES ({placeholders})"
+                    x = cur.executemany(insert_query, data)
+                    print(f"inserted into {table_name} {x} rows.", flush=True)
+        except Exception as e:
+            print(f"INSERT INTO {table_name} FAILED {e}", flush=True)
+        finally:
+            pool.putconn(conn)
+    except Exception as e2:
+        print(f"INSERT INTO {table_name} FAILED {e2}", flush=True)
 
 
 # Function to get the count of rows in agents table
