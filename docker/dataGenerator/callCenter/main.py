@@ -99,11 +99,11 @@ def gen_customer(pool, batch_sz):
     print("Started Generating Customer Data", flush=True)
     dat = generate_customers_data(batch_sz)
     print("Finished Generating Customer Data, Started Inserting", flush=True)
-    insert_data(pool, 'customers',"customer_name, phone_number, email, address, city, country", dat)
+    insert_data(pool, 'customers', "customer_name, phone_number, email, address, city, country", dat)
     print("Finished Inserting Customer Data", flush=True)
 
 
-def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
+def gen_call_day(pool, start_date, bus_day, num_agents, num_customers, b_size):
     print(
         f"Kick off job for {start_date} with {bus_day} business day for num_agents {num_agents} and num_customers {num_customers}")
     start_date += timedelta(hours=8)  # start at 8am
@@ -124,12 +124,18 @@ def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
                  fake.text()
                  )
             )
+            if len(call_list) > b_size:
+                insert_data(pool, "calls",
+                            "agent_id, customer_id, call_date, call_duration, call_purpose, satisfaction_rating, notes",
+                            call_list)
+                call_list = []
             s_dt += call_length
             s_dt += timedelta(minutes=random.randint(1, 2))
             customer += num_agents * days_to_cycle
-        insert_data(pool, "calls",
-                    "agent_id, customer_id, call_date, call_duration, call_purpose, satisfaction_rating, notes",
-                    call_list)
+        if len(call_list) > 0:
+            insert_data(pool, "calls",
+                        "agent_id, customer_id, call_date, call_duration, call_purpose, satisfaction_rating, notes",
+                        call_list)
 
 
 # Parse command-line arguments
@@ -160,7 +166,6 @@ n_workers = int(args.num_jobs)
 n_queue = n_workers * 4
 executor = BoundedExecutor(n_workers, n_queue)
 print(f"Starting with {n_workers} workers and {n_queue} queue length.", flush=True)
-
 
 # Generate data for agents table
 agents_count = get_count(connection_pool, "agents")
@@ -201,7 +206,8 @@ while start_dt < today:
                              start_dt,
                              bus_days % days_to_cycle,
                              int(args.num_agents),
-                             int(args.num_customers))
+                             int(args.num_customers),
+                             batch_size)
     futures.append(future)
     start_dt += timedelta(days=1)
     if start_dt.weekday() > 4:
