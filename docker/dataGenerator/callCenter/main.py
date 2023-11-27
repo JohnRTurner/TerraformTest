@@ -129,11 +129,6 @@ def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
                     call_list)
 
 
-def task_complete_callback(future):
-    global semaphore
-    semaphore.release()
-
-
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Insert mock data into PostgresSQL tables')
 parser.add_argument('--dbname', help='Database name', required=True)
@@ -163,6 +158,15 @@ n_queue = n_workers * 2
 semaphore = Semaphore(n_queue)
 print(f"Starting with {n_workers} workers and {n_queue} queue length.")
 
+
+def task_complete_callback(fut):
+    global semaphore
+    semaphore.release()
+    if hasattr(fut, 'results'):
+        print(fut.result())
+
+
+
 # Generate data for agents table
 agents_count = get_count(connection_pool, "agents")
 with ThreadPoolExecutor(n_workers) as executor:
@@ -176,8 +180,9 @@ with ThreadPoolExecutor(n_workers) as executor:
         futures.append(future)
         agents_count += min_batch
     for future in as_completed(futures):
-        if hasattr(future, 'results'):
-            print(future.result())
+        pass
+    #     if hasattr(future, 'results'):
+    #         print(future.result())
 agents_count = get_count(connection_pool, "agents")
 print(f"Total Agents in Table: {agents_count}")
 
@@ -194,8 +199,9 @@ with ThreadPoolExecutor(n_workers) as executor:
         futures.append(future)
         customer_count += min_batch
     for future in as_completed(futures):
-        if hasattr(future, 'results'):
-            print(future.result())
+        pass
+    #     if hasattr(future, 'results'):
+    #         print(future.result())
 customer_count = get_count(connection_pool, "customers")
 print(f"Total Customers in Table: {customer_count}")
 
@@ -219,7 +225,8 @@ with ThreadPoolExecutor(n_workers) as executor:
             start_dt += timedelta(days=(7 - start_dt.weekday()))
         bus_days += 1
     for future in as_completed(futures):
-        if hasattr(future, 'results'):
-            print(future.result())
+        pass
+    #     if hasattr(future, 'results'):
+    #         print(future.result())
 
 # Can add more to continue running today then staying real-time...
