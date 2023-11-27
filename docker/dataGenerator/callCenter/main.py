@@ -44,21 +44,6 @@ def generate_customers_data(record_count):
     ]
 
 
-# Function to generate mock data for calls
-def generate_calls_data(agents_cnt, customers_cnt):
-    return [
-        (
-            int(random.randint(1, agents_cnt)),  # Assuming there are 10 agents
-            int(random.randint(1, customers_cnt)),  # Assuming there are 10 customers
-            fake.date_time_between(start_date="-30d", end_date="now"),
-            timedelta(minutes=random.randint(1, 60)),
-            fake.text(),
-            int(random.randint(1, 5)),  # Satisfaction rating from 1 to 5
-            fake.text()
-        ) for _ in range(10)
-    ]
-
-
 # Function to insert data into the tables using a connection from the pool
 def insert_data(pool, table_name, col_list, data):
     conn = pool.getconn()
@@ -92,7 +77,7 @@ def max_date(pool, table_name):
         with conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"select date_trunc('day',coalesce(max(call_date + interval '1 day'),current_timestamp(3) - interval '60 days')) from {table_name}")
+                    f"select date_trunc('day',coalesce(max(call_date + interval '1 day'),current_timestamp(3) - interval '365 days')) from {table_name}")
                 l_start_dt = cur.fetchone()[0]
                 if l_start_dt.weekday() > 4:
                     l_start_dt = l_start_dt - timedelta(days=(7 - l_start_dt.weekday()))
@@ -110,7 +95,7 @@ def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
         customer = (bus_day * num_agents) + agent
         call_list = []
         while customer < num_customers:
-            call_length = timedelta(minutes=random.randint(8, 18))
+            call_length = timedelta(minutes=random.randint(5, 9))
             call_list.append(
                 (agent,
                  customer,
@@ -122,8 +107,7 @@ def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
                  )
             )
             s_dt += call_length
-            s_dt += timedelta(minutes=random.randint(1, 3))
-            # probably wrong
+            s_dt += timedelta(minutes=random.randint(1, 2))
             customer += num_agents * days_to_cycle
         insert_data(pool, "calls",
                     "agent_id, customer_id, call_date, call_duration, call_purpose, satisfaction_rating, notes",
@@ -166,7 +150,7 @@ with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
                                        generate_agents_data(min_batch)))
         agents_count += min_batch
     for future in as_completed(futures):
-        if future.results() is not None:
+        if hasattr(future, 'results'):
             print(future.result())
 agents_count = get_count(connection_pool, "agents")
 print(f"Total Agents in Table: {agents_count}")
@@ -182,7 +166,7 @@ with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
                                        generate_customers_data(min_batch)))
         customer_count += min_batch
     for future in as_completed(futures):
-        if future.results() is not None:
+        if hasattr(future, 'results'):
             print(future.result())
 customer_count = get_count(connection_pool, "customers")
 print(f"Total Customers in Table: {customer_count}")
@@ -203,7 +187,7 @@ with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
             start_dt += timedelta(days=(7 - start_dt.weekday()))
         bus_days += 1
     for future in as_completed(futures):
-        if future.results() is not None:
+        if hasattr(future, 'results'):
             print(future.result())
 
 # Can add more to continue running today then staying real-time...
