@@ -2,6 +2,7 @@ import argparse
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
+from threading import Semaphore
 
 import numpy as np
 import psycopg2.pool
@@ -16,6 +17,7 @@ fake = Faker()
 epic_date = datetime(2022, 1, 1).date()
 today = datetime.today().replace(tzinfo=pytz.utc)
 days_to_cycle = 22
+
 
 
 # Function to generate mock data for agents
@@ -127,6 +129,11 @@ def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
                     call_list)
 
 
+def task_complete_callback(future):
+    global semaphore
+    semaphore.release()
+
+
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Insert mock data into PostgresSQL tables')
 parser.add_argument('--dbname', help='Database name', required=True)
@@ -151,14 +158,22 @@ connection_pool = psycopg2.pool.ThreadedConnectionPool(
 )
 
 batch_size = 100
+n_workers = int(args.num_jobs)
+n_queue = n_workers * 2
+semaphore = Semaphore(n_queue)
+print(f"Starting with {n_workers} workers and {n_queue} queue length")
 
 # Generate data for agents table
 agents_count = get_count(connection_pool, "agents")
-with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
+with ThreadPoolExecutor(n_workers) as executor:
     futures = []
     min_batch = batch_size if (batch_size < int(args.num_agents)) else int(args.num_agents)
     while agents_count < int(args.num_agents):
-        futures.append(executor.submit(gen_agent, connection_pool, min_batch))
+        global semaphore
+        semaphore.acquire()
+        future = executor.submit(gen_agent, connection_pool, min_batch)
+        future.add_done_callback(task_complete_callback)
+        futures.append(future)
         agents_count += min_batch
     for future in as_completed(futures):
         if hasattr(future, 'results'):
@@ -168,11 +183,15 @@ print(f"Total Agents in Table: {agents_count}")
 
 # Generate data for customers table
 customer_count = get_count(connection_pool, "customers")
-with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
+with ThreadPoolExecutor(n_workers) as executor:
     futures = []
     min_batch = batch_size if (batch_size < int(args.num_jobs)) else int(args.num_jobs)
     while customer_count < int(args.num_customers):
-        futures.qppend(executor.submit(gen_customer, connection_pool, min_batch))
+        global semaphore
+        semaphore.acquire()
+        future = executor.submit(gen_customer, connection_pool, min_batch)
+        future.add_done_callback(task_complete_callback)
+        futures.append(future)
         customer_count += min_batch
     for future in as_completed(futures):
         if hasattr(future, 'results'):
@@ -182,15 +201,19 @@ print(f"Total Customers in Table: {customer_count}")
 
 start_dt = max_date(connection_pool, "calls")
 bus_days = np.busday_count(epic_date, start_dt.date())
-with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
+with ThreadPoolExecutor(n_workers) as executor:
     futures = []
     while start_dt < today:
-        futures.append(executor.submit(gen_call_day,
-                                       connection_pool,
-                                       start_dt,
-                                       bus_days % days_to_cycle,
-                                       int(args.num_agents),
-                                       int(args.num_customers)))
+        global semaphore
+        semaphore.acquire()
+        future = executor.submit(gen_call_day,
+                                 connection_pool,
+                                 start_dt,
+                                 bus_days % days_to_cycle,
+                                 int(args.num_agents),
+                                 int(args.num_customers))
+        future.add_done_callback(task_complete_callback)
+        futures.append(future)
         start_dt += timedelta(days=1)
         if start_dt.weekday() > 4:
             start_dt += timedelta(days=(7 - start_dt.weekday()))
