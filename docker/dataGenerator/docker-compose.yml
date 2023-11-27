@@ -10,3 +10,12 @@ services:
   call-center:
     build: callCenter
     container_name: callCenter
+    environment:
+      PGDATABASE: ${PGDATABASE}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+      PGHOST: ${PGHOST}
+      PGPORT: ${PGPORT}
+      NUMJOBS: 4
+      NUMAGENTS: 80
+      NUMCUSTOMERS: 50000

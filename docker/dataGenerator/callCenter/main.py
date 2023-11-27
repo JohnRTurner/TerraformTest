@@ -104,9 +104,10 @@ def max_date(pool, table_name):
 def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
     print(f"Kick off job for {start_date} with {bus_day} business day for num_agents {num_agents} and num_customers {num_customers}")
     start_date += timedelta(hours=8)  # start at 8am
-    for agent in range(1, num_agents):
+    for agent in range(1, num_agents + 1):
         s_dt = start_date
-        customer = bus_day + (agent * num_agents)
+        # wrong
+        customer = (bus_day * num_agents) + agent
         call_list = []
         while customer < num_customers:
             call_length = timedelta(minutes=random.randint(8, 18))
@@ -122,6 +123,7 @@ def gen_call_day(pool, start_date, bus_day, num_agents, num_customers):
             )
             s_dt += call_length
             s_dt += timedelta(minutes=random.randint(1, 3))
+            # probably wrong
             customer += num_agents * days_to_cycle
         insert_data(pool, "calls",
                     "agent_id, customer_id, call_date, call_duration, call_purpose, satisfaction_rating, notes",
@@ -157,13 +159,15 @@ batch_size = 100
 agents_count = get_count(connection_pool, "agents")
 with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
     futures = []
+    min_batch = batch_size if (batch_size < int(args.num_agents)) else int(args.num_agents)
     while agents_count < int(args.num_agents):
         futures.append(executor.submit(insert_data, connection_pool, 'agents',
                                        "agent_name, department, hire_date, is_active",
-                                       generate_agents_data(batch_size)))
-        agents_count += batch_size
+                                       generate_agents_data(min_batch)))
+        agents_count += min_batch
     for future in as_completed(futures):
-        print(future.result())
+        if future.results() is not None:
+            print(future.result())
 agents_count = get_count(connection_pool, "agents")
 print(f"Total Agents in Table: {agents_count}")
 
@@ -171,13 +175,15 @@ print(f"Total Agents in Table: {agents_count}")
 customer_count = get_count(connection_pool, "customers")
 with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
     futures = []
+    min_batch = batch_size if (batch_size < int(args.num_jobs)) else int(args.num_jobs)
     while customer_count < int(args.num_customers):
         futures.append(executor.submit(insert_data, connection_pool, 'customers',
                                        "customer_name, phone_number, email, address, city, country",
-                                       generate_customers_data(batch_size)))
-        customer_count += batch_size
+                                       generate_customers_data(min_batch)))
+        customer_count += min_batch
     for future in as_completed(futures):
-        print(future.result())
+        if future.results() is not None:
+            print(future.result())
 customer_count = get_count(connection_pool, "customers")
 print(f"Total Customers in Table: {customer_count}")
 
@@ -197,6 +203,7 @@ with ThreadPoolExecutor(max_workers=int(args.num_jobs)) as executor:
             start_dt += timedelta(days=(7 - start_dt.weekday()))
         bus_days += 1
     for future in as_completed(futures):
-        print(future.result())
+        if future.results() is not None:
+            print(future.result())
 
 # Can add more to continue running today then staying real-time...

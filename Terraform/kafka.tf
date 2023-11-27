@@ -43,7 +43,6 @@ resource "aiven_kafka_connector" "kafka-pg-source" {
     "publication.autocreate.mode" = "filtered"
     "tombstones.on.delete" : "true",
     "table.include.list" : "public.customers, public.calls",
-    "column.exclude.list" : "agent_id"
     "name" : "kafka-pg-source",
     "connector.class" : "io.debezium.connector.postgresql.PostgresConnector",
     "key.converter" : "io.confluent.connect.avro.AvroConverter",
@@ -117,7 +116,7 @@ resource "aiven_kafka_connector" "kafka-calls-sink" {
     "transforms.transform-2.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
     "transforms.transform-2.target.type": "Timestamp",
     "transforms.transform-2.field": "call_date",
-    "transforms.transform-2.unix.precision": "microseconds"
+    "transforms.transform-2.unix.precision": "milliseconds"
   }
   depends_on = [aiven_kafka_connector.kafka-pg-source, aiven_mysql_database.mysql1db1]
 }
