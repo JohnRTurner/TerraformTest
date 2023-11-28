@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+  grafana: # default password admin/admin, change on first login https://grafana.com/docs/grafana/latest/dashboards/manage-dashboards/
+    image: grafana/grafana:9.3.4
+    user: 1000:1000
+    restart: always
+    depends_on:
+      - prometheus
+    container_name: grafana
+    # ports:
+    #  - "3000:3000"
+    environment:
+      TZ: America/New_York
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,snuids-trafficlights-panel
+    volumes:
+      - ./grafana-etc:/etc/grafana # setup connections here
+      - ./grafana-dashboards:/var/lib/grafana/dashboards # put saved json files here
+      - ./grafana-data:/var/lib/grafana # used to save grafana changes between recreating docker
+  prometheus: # must turn docker prometheus exporter on https://docs.docker.com/config/daemon/prometheus/
+    image: prom/prometheus:v2.41.0
+    container_name: prometheus
+    user: 1000:1000
+    restart: always
+    environment:
+      TZ: America/New_York
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    #ports:
+    #  - "9090:9090"
+    # extra_hosts not needed for windows/mac
+    #extra_hosts:
+    #  - "host.docker.internal:${HOST_IP}"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./prometheus-data:/prometheus
+  alertmanager: # https://medium.com/techno101/how-to-send-a-mail-using-prometheus-alertmanager-7e880a3676db
+    container_name: alertmanager
+    hostname: alertmanager
+    restart: always
+    depends_on:
+      - prometheus
+    image: prom/alertmanager:v0.25.0
+    environment:
+      TZ: America/New_York
+    volumes:
+      - ./alert-manager/alertmanager.conf:/etc/alertmanager/alertmanager.conf
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.conf'
+    #ports:
+    #  - "9093:9093"
+
+  ping-exporter:
+    image: czerwonk/ping_exporter:v1.0.1
+    container_name: ping
+    restart: always
+    environment:
+      TZ: America/New_York
+    volumes:
+      - ./ping:/config:ro

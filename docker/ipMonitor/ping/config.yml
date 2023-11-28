@@ -1,0 +1,24 @@
+targets:
+  - kafka-a2f75d-jturner-demo.a.aivencloud.com
+  - 18.216.46.54
+  - 18.221.180.4
+  - 3.16.147.93
+  - 8.8.8.8
+  - 8.8.4.4
+  - 208.67.222.222
+  - 208.67.222.220
+  - 1.1.1.1
+  - 1.0.0.1
+
+dns:
+  refresh: 2m15s
+  nameserver: 8.8.8.8
+
+ping:
+  interval: 15s
+  timeout: 3s
+  history-size: 42
+  size: 120
+
+options:
+  disableIPv6: true
