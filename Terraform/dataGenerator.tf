@@ -30,7 +30,7 @@ resource "aws_instance" "data-generator" {
     update = "15m"
     create = "15m"
   }
-  depends_on = [aiven_kafka_connector.kafka-pg-source]
+  depends_on = [aiven_kafka_connector.kafka-calls-sink, aiven_kafka_connector.kafka-customers-sink]
 }
 
 output "dataGeneratorName"{

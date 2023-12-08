@@ -21,8 +21,8 @@ fake = Faker()
 def worker(inp, out, dbname, user, password, host, port):
     # Create a connection pool
     l_pool = psycopg2.pool.ThreadedConnectionPool(
-        minconn=5,
-        maxconn=5,
+        minconn=2,
+        maxconn=2,
         dbname=dbname,
         user=user,
         password=password,
@@ -31,6 +31,7 @@ def worker(inp, out, dbname, user, password, host, port):
     )
     for func1, args1 in iter(inp.get, 'STOP'):
         out.put(func1(l_pool, *args1))
+    l_pool.closeall()
 
 
 # Function to generate mock data for agents
@@ -106,7 +107,7 @@ def max_date(pool, table_name):
         with conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"select date_trunc('day',coalesce(max(call_date) + interval '1 day',current_timestamp(3) - interval '90 days')) from {table_name}")
+                    f"select date_trunc('day',coalesce(max(call_date) + interval '1 day',current_timestamp(3) - interval '365 days')) from {table_name}")
                 l_start_dt = cur.fetchone()[0]
                 if l_start_dt.weekday() > 4:
                     l_start_dt = l_start_dt - timedelta(days=(7 - l_start_dt.weekday()))
@@ -178,8 +179,8 @@ if __name__ == '__main__':
 
     # Create a connection pool
     connection_pool = psycopg2.pool.ThreadedConnectionPool(
-        minconn=(int(args.num_jobs) * 6) + 1,
-        maxconn=(int(args.num_jobs) * 6) + 1,
+        minconn=2,
+        maxconn=2,
         dbname=args.dbname,
         user=args.user,
         password=args.password,
@@ -240,9 +241,16 @@ if __name__ == '__main__':
         bus_days += 1
         tskCnt += 1
     for i in range(tskCnt):
-        print(f"{done_queue.get()}")
+        msg = done_queue.get()
+        if msg is not None:
+            print(f"{msg}")
 
-    # Stop mulitithreaded prpocs
+    ####################################################################
+    # Can add more to continue running today then staying real-time... #
+    ####################################################################
+
+    # Stop multithreaded procs
     for i in range(n_workers):
         task_queue.put('STOP')
-    # Can add more to continue running today then staying real-time...
+
+    connection_pool.closeall()

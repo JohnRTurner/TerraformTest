@@ -8,8 +8,8 @@ services:
     depends_on:
       - prometheus
     container_name: grafana
-    # ports:
-    #  - "3000:3000"
+    ports:
+      - "3000:3000"
     environment:
       TZ: America/New_York
       GF_INSTALL_PLUGINS: grafana-piechart-panel,snuids-trafficlights-panel
@@ -26,8 +26,8 @@ services:
       TZ: America/New_York
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-    #ports:
-    #  - "9090:9090"
+    ports:
+      - "9090:9090"
     # extra_hosts not needed for windows/mac
     #extra_hosts:
     #  - "host.docker.internal:${HOST_IP}"
@@ -47,8 +47,8 @@ services:
       - ./alert-manager/alertmanager.conf:/etc/alertmanager/alertmanager.conf
     command:
       - '--config.file=/etc/alertmanager/alertmanager.conf'
-    #ports:
-    #  - "9093:9093"
+    ports:
+      - "9093:9093"
 
   ping-exporter:
     image: czerwonk/ping_exporter:v1.0.1

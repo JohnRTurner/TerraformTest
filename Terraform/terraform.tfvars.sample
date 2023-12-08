@@ -1,6 +1,9 @@
 aiven_api_token = "api_token_here"
 project_name    = "project_name_here"
 cloud_name = "cloud_name"
+maintenance_dow = "monday"
+maintenance_time = "10:00:00"
+
 mysql_user = "appuser"
 mysql_password = "your_pwd"
 pg_user = "appuser"

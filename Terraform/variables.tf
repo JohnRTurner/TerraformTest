@@ -9,7 +9,17 @@ variable "project_name" {
 }
 
 variable "cloud_name" {
-  description = "Default Aiven cloud"
+  description = "Aiven cloud"
+  type = string
+}
+
+variable "maintenance_dow" {
+  description = "Maintenance Window Day of Week"
+  type = string
+}
+
+variable "maintenance_time" {
+  description = "Maintenance Window Time"
   type = string
 }
 

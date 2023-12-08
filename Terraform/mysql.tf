@@ -3,8 +3,8 @@ resource "aiven_mysql" "mysql1" {
   cloud_name              = var.cloud_name
   plan                    = "business-4"
   service_name            = "mysql1"
-  maintenance_window_dow  = "monday"
-  maintenance_window_time = "10:00:00"
+  maintenance_window_dow  = var.maintenance_dow
+  maintenance_window_time = var.maintenance_time
 
   mysql_user_config {
     admin_username = var.mysql_user
@@ -30,6 +30,21 @@ resource "aiven_mysql_database" "mysql1db1" {
       aiven_mysql_database.mysql1db1.database_name)
   }
 }
+
+resource "aiven_service_integration" "mysq1_to_pg1" {
+  project                  = var.project_name
+  integration_type         = "metrics"
+  source_service_name      = aiven_mysql.mysql1.service_name
+  destination_service_name = aiven_pg.pg1.service_name
+}
+
+resource "aiven_service_integration" "mysql1_to_os1" {
+  project                  = var.project_name
+  integration_type         = "logs"
+  source_service_name      = aiven_mysql.mysql1.service_name
+  destination_service_name = aiven_opensearch.os1.service_name
+}
+
 
 
 output "mysql1_connect"{
