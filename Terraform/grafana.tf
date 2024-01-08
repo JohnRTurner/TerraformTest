@@ -19,6 +19,7 @@ resource "aiven_service_integration" "pg1_dashboard_grafana1" {
   integration_type         = "dashboard"
   source_service_name      = aiven_grafana.grafana1.service_name
   destination_service_name = aiven_pg.pg1.service_name
+  depends_on = [aiven_pg_database.pg1db1, aiven_grafana.grafana1]
 }
 
 

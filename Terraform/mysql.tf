@@ -36,6 +36,7 @@ resource "aiven_service_integration" "mysq1_to_pg1" {
   integration_type         = "metrics"
   source_service_name      = aiven_mysql.mysql1.service_name
   destination_service_name = aiven_pg.pg1.service_name
+  depends_on = [aiven_mysql_database.mysql1db1, aiven_pg_database.pg1db1]
 }
 
 resource "aiven_service_integration" "mysql1_to_os1" {
@@ -43,6 +44,7 @@ resource "aiven_service_integration" "mysql1_to_os1" {
   integration_type         = "logs"
   source_service_name      = aiven_mysql.mysql1.service_name
   destination_service_name = aiven_opensearch.os1.service_name
+  depends_on = [aiven_mysql_database.mysql1db1, aiven_opensearch.os1]
 }
 
 

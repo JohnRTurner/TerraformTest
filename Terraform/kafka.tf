@@ -134,6 +134,7 @@ resource "aiven_kafka_connector" "kafka-calls-sink-os" {
     "connection.username": aiven_opensearch.os1.service_username,
     "connection.password": aiven_opensearch.os1.service_password,
     "behavior.on.version.conflict": "ignore",
+    "read.timeout.ms": 30000,  # extended timeout from 3 to 30 seconds
     "tasks.max":"1",
     #"key.ignore": "true",
     "key.converter": "io.confluent.connect.avro.AvroConverter",
@@ -155,43 +156,9 @@ resource "aiven_kafka_connector" "kafka-calls-sink-os" {
     "transforms.call_date.unix.precision": "milliseconds",
     "transforms.nameTopic.type": "org.apache.kafka.connect.transforms.TimestampRouter",
     "transforms.nameTopic.timestamp.format": "yyyy-MM",
-    "transforms.nameTopic.topic.format": "calls_$${timestamp}"
+    "transforms.nameTopic.topic.format": "calls_$${timestamp}",
+    "transforms.nameTopic.timestamp.field": "call_date",
   }
-
-/*
-
-{
-"connection.username": "avnadmin",
-"connection.password": "AVNS_546O5Ee68XmqEUPxjY7",
-"connection.url": "https://os1-jturner-demo.a.aivencloud.com:15376",
-"name": "kafka-calls-sink-os",
-"connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
-"tasks.max": "1",
-"key.converter": "io.confluent.connect.avro.AvroConverter",
-"key.converter.schema.registry.url": "https://kafka1-jturner-demo.a.aivencloud.com:15380",
-"key.converter.basic.auth.credentials.source": "USER_INFO",
-"key.converter.schema.registry.basic.auth.user.info": "avnadmin:AVNS_Y6beWK1aRXwfNSJCwkb",
-"value.converter": "io.confluent.connect.avro.AvroConverter",
-"value.converter.schema.registry.url": "https://kafka1-jturner-demo.a.aivencloud.com:15380",
-"value.converter.basic.auth.credentials.source": "USER_INFO",
-"value.converter.schema.registry.basic.auth.user.info": "avnadmin:AVNS_Y6beWK1aRXwfNSJCwkb",
-"topics": "pg1.public.calls",
-"transforms": "NewRecord,ExtractKey,call_date,nameTopic",
-"transforms.ExtractKey.field": "call_id",
-"transforms.ExtractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
-"transforms.NewRecord.drop.tombstones": "true",
-"transforms.NewRecord.type": "io.debezium.transforms.ExtractNewRecordState",
-"transforms.call_date.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-"transforms.call_date.target.type": "Timestamp",
-"transforms.call_date.field": "call_date",
-"transforms.call_date.unix.precision": "milliseconds",
-"transforms.nameTopic.type": "org.apache.kafka.connect.transforms.TimestampRouter",
-"transforms.nameTopic.timestamp.format": "yyyy-MM",
-"transforms.nameTopic.topic.format": "calls_${timestamp}"
-}
-
-*/
-
   depends_on = [aiven_kafka_connector.kafka-pg-source, aiven_opensearch.os1]
 }
 
@@ -199,8 +166,8 @@ resource "aiven_kafka_connector" "kafka-calls-sink-os" {
 curl -X PUT $(terraform output -raw os1_connect)/calls_2023-12 -H 'Content-Type: application/json' -d '
 {
   "settings": {
-    "number_of_shards": 3,
-    "number_of_replicas": 2
+    "number_of_shards": 6,
+    "number_of_replicas": 0
   }
 }'
 
@@ -209,11 +176,57 @@ curl -X DELETE $(terraform output -raw os1_connect)/calls_2023-12
 */
 
 
+
+resource "aiven_kafka_connector" "kafka-callsz-sink-os" {
+  project        = var.project_name
+  service_name   = aiven_kafka.kafka1.service_name
+  connector_name = "kafka-callsz-sink-os"
+  config = {
+    "name":"kafka-callsz-sink-os",
+    "connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+    "topics": "pg1.public.calls",
+    "connection.url": format("https://%s:%s", aiven_opensearch.os1.service_host, aiven_opensearch.os1.service_port),
+    "connection.username": aiven_opensearch.os1.service_username,
+    "connection.password": aiven_opensearch.os1.service_password,
+    "behavior.on.version.conflict": "ignore",
+    "read.timeout.ms": 30000,  # extended timeout from 3 to 30 seconds
+    "tasks.max":"1",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": format("https://%s:%s", aiven_kafka.kafka1.components[2].host, aiven_kafka.kafka1.components[2].port),
+    "key.converter.basic.auth.credentials.source": "USER_INFO",
+    "key.converter.schema.registry.basic.auth.user.info": format("%s:%s", aiven_kafka.kafka1.service_username, aiven_kafka.kafka1.service_password),
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": format("https://%s:%s", aiven_kafka.kafka1.components[2].host, aiven_kafka.kafka1.components[2].port),
+    "value.converter.basic.auth.credentials.source": "USER_INFO",
+    "value.converter.schema.registry.basic.auth.user.info": format("%s:%s", aiven_kafka.kafka1.service_username, aiven_kafka.kafka1.service_password),
+    "transforms": "NewRecord,ExtractKey,call_date",  #,nameTopic
+    "transforms.NewRecord.drop.tombstones": "true",
+    "transforms.NewRecord.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.NewRecord.route.by.field": "call_date"
+    "transforms.ExtractKey.field": "call_id",
+    "transforms.ExtractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.call_date.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+    "transforms.call_date.target.type": "Timestamp",
+    "transforms.call_date.field": "call_date",
+    "transforms.call_date.unix.precision": "milliseconds",
+    #"transforms.nameTopic.type": "org.apache.kafka.connect.transforms.TimestampRouter",
+    #"transforms.nameTopic.timestamp.format": "yyyy-MM",
+    #"transforms.nameTopic.topic.format": "callsz_$${timestamp}"
+  }
+  depends_on = [aiven_kafka_connector.kafka-pg-source, aiven_opensearch.os1]
+}
+
+
+
+
+
+
 resource "aiven_service_integration" "kafka1_to_pg1" {
   project                  = var.project_name
   integration_type         = "metrics"
   source_service_name      = aiven_kafka.kafka1.service_name
   destination_service_name = aiven_pg.pg1.service_name
+  depends_on = [aiven_kafka.kafka1, aiven_pg_database.pg1db1]
 }
 
 resource "aiven_service_integration" "kafka1_to_os1" {
@@ -221,6 +234,7 @@ resource "aiven_service_integration" "kafka1_to_os1" {
   integration_type         = "logs"
   source_service_name      = aiven_kafka.kafka1.service_name
   destination_service_name = aiven_opensearch.os1.service_name
+  depends_on = [aiven_kafka.kafka1, aiven_opensearch.os1]
 }
 
 output "kafka1_service_uri"{ #same as host port
